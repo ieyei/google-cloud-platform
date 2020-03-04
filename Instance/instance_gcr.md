@@ -62,8 +62,8 @@ Instance에서 gcr 기능을 이용하기 위해서는 Instance scope에 storage
 vm stop 후 cloudshell에서 실행 
 
 ```
-# Instance name : instance-5 )
-gcloud compute instances set-service-account instance-5 --scopes=storage-rw --zone=us-central1-a
+# Instance name : instance-5 
+gcloud compute instances set-service-account instance-5 --scopes storage-rw --zone=us-central1-a
 ```
 
 
