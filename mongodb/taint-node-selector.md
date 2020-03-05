@@ -93,3 +93,15 @@ test-5b98dc6c-pxm6b          1/1     Running    0          3m45s   10.36.4.7    
 
 
 
+# Resizing a cluster
+
+https://cloud.google.com/kubernetes-engine/docs/how-to/resizing-a-cluster
+
+```
+gcloud beta container clusters resize [CLUSTER_NAME] --node-pool [NODE_POOL] \
+--num-nodes [NUM_NODES]
+
+gcloud beta container clusters resize my-cluster --node-pool default-pool \
+--num-nodes 1
+```
+
