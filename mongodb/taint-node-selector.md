@@ -102,6 +102,6 @@ gcloud beta container clusters resize [CLUSTER_NAME] --node-pool [NODE_POOL] \
 --num-nodes [NUM_NODES]
 
 gcloud beta container clusters resize my-cluster --node-pool default-pool \
---num-nodes 1
+--num-nodes 1 --zone us-central1-a
 ```
 
