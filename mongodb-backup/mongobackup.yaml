@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: mongo-backup
+  name: mongo-backup
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongo-backup
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: mongo-backup
+    spec:
+      containers:
+      - image: ubuntu
+        name: ubuntu
+        command: ["/bin/sh"]
+        args:
+          - -c
+          - |
+            # google sdk install
+            apt-get update && apt-get install -y curl python
+            curl https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-280.0.0-linux-x86_64.tar.gz -o g-sdk.tar.gz
+            tar xf g-sdk.tar.gz  -C /root
+            #export PATH=$PATH:/root/google-cloud-sdk/bin
+            echo "export PATH=$PATH:/root/google-cloud-sdk/bin" >> /root/.bashrc
+            #cp -r /root/google-cloud-sdk/bin/* /usr/local/bin
+            
+            # mongodb client install
+            apt-get install -y libcurl4 openssl
+            cd /root
+            curl -OL https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu1804-4.2.3.tgz
+            tar -zxf mongodb-linux-*-4.2.3.tgz && mv mongodb-linux-*-4.2.3 mongodb
+            echo "export PATH=$PATH:/root/mongodb/bin" >> /root/.bashrc
+            #cp -r /root/mongodb/bin/* /usr/local/bin
+            mkdir /root/dump
+            echo "====== install finished"
+            tail -f /dev/null
+        resources: {}
+        volumeMounts:
+        - name: google-cloud-key
+          mountPath: /var/secrets/google
+        env:
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /var/secrets/google/key.json
+        - name:  MONGO_URI
+          value: "mongodb://root:password@mongodb:27017/admin"
+        - name:  BUCKET_NAME
+          value: mongodb-backup123
+        resources: {}
+      volumes:
+      - name: google-cloud-key
+        secret:
+          secretName: gcs-key
