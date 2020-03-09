@@ -89,67 +89,12 @@ $ kubectl create secret generic gcs-key --from-file=key.json
 
 ### Backup Pod 생성
 
-mongobackup.yaml:
+
 
 * MONGO_URI : mongodb://[user]:[user password]@[mongodb svc]:27017/admin
 * BUCKET_NAME : 위에서 생성한 gcs bucket name
 
-```
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  labels:
-    app: mongo-backup
-  name: mongo-backup
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: mongo-backup
-  strategy: {}
-  template:
-    metadata:
-      labels:
-        app: mongo-backup
-    spec:
-      containers:
-      - image: bitnami/mongodb
-        name: mongo-backup
-        command: ["/bin/sh"]
-        args:
-          - -c
-          - |
-            apt-get update && apt-get install -y lsb-release curl
-            export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)"
-            echo "deb http://packages.cloud.google.com/apt $CLOUD_SDK_REPO main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
-            curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
-            apt-get update && apt-get install -y google-cloud-sdk
-        volumeMounts:
-        - name: google-cloud-key
-          mountPath: /var/secrets/google
-        env:
-        - name: GOOGLE_APPLICATION_CREDENTIALS
-          value: /var/secrets/google/key.json
-        - name:  MONGO_URI
-          value: "mongodb://root:password@mongodb:27017/admin"
-        - name:  BUCKET_NAME
-          value: mongodb-backup123
-        resources: {}
-      volumes:
-      - name: google-cloud-key
-        secret:
-          secretName: gcs-key
-```
-
-
-
-```
-kubectl apply -f mongobackup.yaml
-```
-
-
-
-mongobackup.yaml
+[mongobackup.yaml](mongobackup.yaml)
 
 ```
 apiVersion: apps/v1
@@ -180,8 +125,9 @@ spec:
             apt-get update && apt-get install -y curl python
             curl https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-280.0.0-linux-x86_64.tar.gz -o g-sdk.tar.gz
             tar xf g-sdk.tar.gz  -C /root
-            export PATH=$PATH:/root/google-cloud-sdk/bin
+            #export PATH=$PATH:/root/google-cloud-sdk/bin
             echo "export PATH=$PATH:/root/google-cloud-sdk/bin" >> /root/.bashrc
+            #cp -r /root/google-cloud-sdk/bin/* /usr/local/bin
             
             # mongodb client install
             apt-get install -y libcurl4 openssl
@@ -189,6 +135,9 @@ spec:
             curl -OL https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu1804-4.2.3.tgz
             tar -zxf mongodb-linux-*-4.2.3.tgz && mv mongodb-linux-*-4.2.3 mongodb
             echo "export PATH=$PATH:/root/mongodb/bin" >> /root/.bashrc
+            #cp -r /root/mongodb/bin/* /usr/local/bin
+            mkdir /root/dump
+            echo "====== install finished"
             tail -f /dev/null
         resources: {}
         volumeMounts:
@@ -223,9 +172,10 @@ copy to gcs : gsutil cp $BACKUP_PATH$BACKUP_FILENAME gs://$BUCKET_NAME/$BACKUP_F
 
 
 
-backup.sh
+[backup.sh](backup.sh)
 
 ```
+
 # Utility functions
 get_log_date () {
     date +[%Y-%m-%d\ %H:%M:%S]
@@ -248,6 +198,7 @@ fi
 BACKUP_PATH="/root/dump/"
 
 # START
+export PATH=$PATH:/root/google-cloud-sdk/bin:/root/mongodb/bin
 echo "$(get_log_date) Mongo backup started"
 
 # Activate google cloud service account
@@ -271,8 +222,8 @@ echo "Copying $BACKUP_PATH$BACKUP_FILENAME to gs://$BUCKET_NAME/$BACKUP_FILENAME
 gsutil cp $BACKUP_PATH$BACKUP_FILENAME gs://$BUCKET_NAME/$BACKUP_FILENAME 2>&1
 
 # Clean
-echo "Removing backup data"
-rm -rf $BACKUP_PATH*
+#echo "Removing backup data"
+#rm -rf $BACKUP_PATH*
 
 # FINISH
 echo "$(get_log_date) Copying finished"
