@@ -1,5 +1,15 @@
 # GCS에 Kubernetes Mongodb Backup
 
+**순서**
+
+1. GCS Bucket 생성
+2. Service Account 생성 및 권한 부여
+3. SA key 파일 K8s secret으로 생성
+4. mongodb backup pod 생성
+5. backup script 실행
+
+
+
 
 
 ## GCS에 Bucket 생성
@@ -50,7 +60,9 @@ gcloud iam service-accounts keys create key.json \
   
 ```
 
-### 
+
+
+
 
 ### Service account에 역할 부여
 
@@ -233,7 +245,7 @@ echo "$(get_log_date) Copying finished"
 
 ### Backup 실행
 
-mongobackup.sh
+[mongobackup.sh](mongobackup.sh)
 
 ```
 #!/bin/bash
